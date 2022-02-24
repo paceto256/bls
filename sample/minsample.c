@@ -4,32 +4,79 @@
 #include <assert.h>
 
 void setPair(blsSecretKey *sec, blsPublicKey *pub) {
-	blsSecretKeySetDecStr(&sec, "13", 2);
-	blsGetPublicKey(&pub, &sec);
-
-//    // init SecretKey sec by random number
-//    blsSecretKeySetByCSPRNG(&sec);
-//    // get PublicKey pub from SecretKey sec
-//    blsGetPublicKey(&pub, &sec);
+    // init SecretKey sec by random number
+    blsSecretKeySetByCSPRNG(sec);
+    // get PublicKey pub from SecretKey sec
+    blsGetPublicKey(pub, sec);
 }
 
-void simpleSample()
+void secretToString(blsSecretKey *sec, char *string)
+{
+    unsigned char buf[128];
+    size_t n = blsSecretKeySerialize(buf, sizeof(buf), &sec);
+    n = blsSecretKeySerialize(buf, sizeof(buf), &sec);
+	for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
+}
+
+void publicKeyToString(blsPublicKey *pub, char *string)
+{
+    unsigned char buf[128];
+    size_t n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
+    n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
+    for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
+}
+
+
+void generatePair()
 {
 	blsSecretKey sec;
 	blsPublicKey pub;
-	blsSecretKeySetDecStr(&sec, "13", 2);
-	blsGetPublicKey(&pub, &sec);
 
-    // setPair(&sec, &pub);
+    setPair(&sec, &pub);
 
-	blsSignature sig;
-	const char *msg = "abcdef";
-	size_t msgSize = 6;
-	blsSign(&sig, &sec, msg, msgSize);
+    char privateKey[128];
+    char publicKey[128];
 
-	printf("verify correct message %d\n", blsVerify(&sig, &pub, msg, msgSize));
-	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
+    secretToString(&sec, privateKey);
+    publicKeyToString(&pub, publicKey);
+
+    printf("{\"privateKey\":\"%s\", \"publicKey\":\"%s\"}", privateKey, publicKey);
+
+//	blsSignature sig;
+//	const char *msg = "Hello World!";
+//	size_t msgSize = 12;
+
+	// blsSign(&sig, &sec, msg, msgSize);
+
+	// printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
+	// printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
 }
+
+
+//      printf("%02x", buf[i]);
+//	    char buffer[1];
+//	    sprintf(buffer, "%02x", buf[i]);
+//	    strcat(string,buffer);
+
+
+
+
+//void simpleSample()
+//{
+//	blsSecretKey sec;
+//	blsPublicKey pub;
+//
+//    setPair(&sec, &pub);
+//
+//	blsSignature sig;
+//	const char *msg = "Hello World!";
+//	size_t msgSize = 12;
+//
+//	blsSign(&sig, &sec, msg, msgSize);
+//
+//	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
+//	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
+//}
 
 //void k_of_nSample()
 //{
@@ -131,7 +178,29 @@ void simpleSample()
 //#undef N
 //}
 
-int main()
+const static struct {
+  const char *name;
+  void (*func)(void);
+} function_map [] = {
+  { "generatePair", generatePair },
+};
+
+int call_function(const char *name)
+{
+  int i;
+
+  for (i = 0; i < (sizeof(function_map) / sizeof(function_map[0])); i++) {
+    if (!strcmp(function_map[i].name, name) && function_map[i].func) {
+      function_map[i].func();
+      return 0;
+    }
+  }
+
+  return -1;
+}
+
+// make && make install && clear && time ../bin/minsample getPair
+int main(int argc, char *argv[])
 {
 	int r = blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR);
 	if (r != 0) {
@@ -139,7 +208,6 @@ int main()
 		return 1;
 	}
 
-	simpleSample();
-	// getPair();
+	call_function(argv[1]);
 	return 0;
 }
