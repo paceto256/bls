@@ -10,63 +10,133 @@ void setPair(blsSecretKey *sec, blsPublicKey *pub) {
     blsGetPublicKey(pub, sec);
 }
 
-void secretToString(blsSecretKey *sec, char *string)
+void dumpSec(blsSecretKey *sec)
 {
-    unsigned char buf[128];
-    size_t n = blsSecretKeySerialize(buf, sizeof(buf), &sec);
-    n = blsSecretKeySerialize(buf, sizeof(buf), &sec);
-	for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
+	unsigned char buf[64];
+	size_t n = blsSecretKeySerialize(buf, sizeof(buf), sec);
+	for (size_t i = 0; i < n; i++) {
+		printf("%02x", buf[i]);
+	}
 }
 
-void publicKeyToString(blsPublicKey *pub, char *string)
+void dumpPub(blsPublicKey *pub)
 {
-    unsigned char buf[128];
-    size_t n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
-    n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
-    for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
+	unsigned char buf[256];
+	size_t n = blsPublicKeySerialize(buf, sizeof(buf), pub);
+	for (size_t i = 0; i < n; i++) {
+		printf("%02x", buf[i]);
+	}
 }
 
-/**
-*
-*/
+void sec2hex(blsSecretKey *sec, char *hex)
+{
+	unsigned char buf[64];
+
+	size_t n = blsSecretKeySerialize(buf, 128, sec);
+
+	for (size_t i = 0; i < n; i++) {
+        char row[4];
+        sprintf(row, "%02x", buf[i]);
+        strcat(hex, row);
+	}
+}
+
+void pub2hex(blsPublicKey *pub, char *hex)
+{
+	unsigned char buf[256];
+	size_t n = blsPublicKeySerialize(buf, 256, pub);
+
+	for (size_t i = 0; i < n; i++) {
+        char row[4];
+        sprintf(row, "%02x", buf[i]);
+        strcat(hex, row);
+	}
+}
+
+// Usage: bls_api generatePair
 void generatePair()
 {
 	blsSecretKey sec;
 	blsPublicKey pub;
 
-    setPair(&sec, &pub);
+	setPair(&sec, &pub);
 
-    char privateKey[128];
-    char publicKey[128];
+    char privateKey[128] = "";
+    char publicKey[256] = "";
 
-    secretToString(&sec, privateKey);
-    publicKeyToString(&pub, publicKey);
+	sec2hex(&sec, privateKey);
+	pub2hex(&pub, publicKey);
 
-    printf("{\"privateKey\":\"%s\", \"publicKey\":\"%s\"}", privateKey, publicKey);
+    printf("{"
+        "\"privateKey\":\"%s\","
+        "\"publicKey\":\"%s\""
+    "}",privateKey, publicKey);
 }
 
-void sign()
+//void str2sec(blsSecretKey *sec, const void *buf, mclSize bufSize)
+//{
+//    blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
+//}
+
+
+//mclSize blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
+//mclSize blsPublicKeyDeserialize(blsPublicKey *pub, const void *buf, mclSize bufSize);
+//mclSize blsSignatureDeserialize(blsSignature *sig, const void *buf, mclSize bufSize);
+
+
+// Usage: bls_api sign {message} {privateKey}
+void sign(char *msg, char *privateKey)
 {
 	blsSecretKey sec;
-	blsPublicKey pub;
+    blsSecretKeySetHexStr(&sec, privateKey, sizeof(privateKey));
 
-    setPair(&sec, &pub);
+//    // unsigned char buf[128];
+//    size_t n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
+//    for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
 
-    char privateKey[128];
-    char publicKey[128];
+//    blsSecretKeyDeserialize(&sec, privateKey, sizeof(privateKey));
+//
+//	char test[128];
+//	sec2hex(&sec, test);
 
-    secretToString(&sec, privateKey);
-    publicKeyToString(&pub, publicKey);
+	printf("{"
+        "\"test\":\"%s\""
+    "}",privateKey);
 
-    printf("{\"privateKey\":\"%s\", \"publicKey\":\"%s\"}", privateKey, publicKey);
+    // blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
+	// str2sec(&sec, privateKey, strlen(privateKey));
+    // printf("%s %s", msg, privateKey);
+
+//    blsSignature sig;
+//    blsSign(&sig, &sec, msg, strlen(msg));
+
+//	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
+//	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
+
+//    printf("{"
+//        "\"privateKey\":\"%s\","
+//        "\"publicKey\":\"%s\""
+//    "}",privateKey, publicKey);
+
 }
 
+// make && make install && clear && time ../bin/minsample getPair
+int main(int argc, char *argv[])
+{
+	int r = blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR);
+	if (r != 0) {
+		printf("err blsInit %d\n", r);
+		return 1;
+	}
 
-//      printf("%02x", buf[i]);
-//	    char buffer[1];
-//	    sprintf(buffer, "%02x", buf[i]);
-//	    strcat(string,buffer);
+	if (!strcmp("generatePair",argv[1])) {
+	    generatePair();
+	} else if (!strcmp("sign",argv[1])) {
+	    sign(argv[2], argv[3]);
+	}
 
+	return 0;
+}
 
 
 
@@ -186,37 +256,3 @@ void sign()
 //#undef K
 //#undef N
 //}
-
-const static struct {
-  const char *name;
-  void (*func)(void);
-} function_map [] = {
-  { "generatePair", generatePair },
-};
-
-int call_function(const char *name)
-{
-  int i;
-
-  for (i = 0; i < (sizeof(function_map) / sizeof(function_map[0])); i++) {
-    if (!strcmp(function_map[i].name, name) && function_map[i].func) {
-      function_map[i].func();
-      return 0;
-    }
-  }
-
-  return -1;
-}
-
-// make && make install && clear && time ../bin/minsample getPair
-int main(int argc, char *argv[])
-{
-	int r = blsInit(MCL_BLS12_381, MCLBN_COMPILED_TIME_VAR);
-	if (r != 0) {
-		printf("err blsInit %d\n", r);
-		return 1;
-	}
-
-	call_function(argv[1]);
-	return 0;
-}
