@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-void setPair(blsSecretKey *sec, blsPublicKey *pub) {
+void initPair(blsSecretKey *sec, blsPublicKey *pub) {
     // init SecretKey sec by random number
     blsSecretKeySetByCSPRNG(sec);
     // get PublicKey pub from SecretKey sec
@@ -12,7 +12,14 @@ void setPair(blsSecretKey *sec, blsPublicKey *pub) {
 
 void dumpSec(blsSecretKey *sec)
 {
-	unsigned char buf[64];
+	unsigned char buf[1024];
+	size_t n = blsSecretKeyGetHexStr(buf, sizeof(buf), sec);
+    printf("%s", buf);
+}
+
+void dumpSec2(blsSecretKey *sec)
+{
+	unsigned char buf[1024];
 	size_t n = blsSecretKeySerialize(buf, sizeof(buf), sec);
 	for (size_t i = 0; i < n; i++) {
 		printf("%02x", buf[i]);
@@ -28,6 +35,19 @@ void dumpPub(blsPublicKey *pub)
 	}
 }
 
+void pub2hex(blsPublicKey *pub, char *hex)
+{
+	unsigned char buf[256];
+	size_t n = blsPublicKeySerialize(buf, 256, pub);
+
+	for (size_t i = 0; i < n; i++) {
+        char row[4];
+        sprintf(row, "%02x", buf[i]);
+        strcat(hex, row);
+	}
+}
+
+
 void sec2hex(blsSecretKey *sec, char *hex)
 {
 	unsigned char buf[64];
@@ -41,36 +61,36 @@ void sec2hex(blsSecretKey *sec, char *hex)
 	}
 }
 
-void pub2hex(blsPublicKey *pub, char *hex)
-{
-	unsigned char buf[256];
-	size_t n = blsPublicKeySerialize(buf, 256, pub);
-
-	for (size_t i = 0; i < n; i++) {
-        char row[4];
-        sprintf(row, "%02x", buf[i]);
-        strcat(hex, row);
-	}
-}
-
-// Usage: bls_api generatePair
+/** Usage: bls_api generatePair */
 void generatePair()
 {
 	blsSecretKey sec;
 	blsPublicKey pub;
 
-	setPair(&sec, &pub);
+	initPair(&sec, &pub);
 
-    char privateKey[128] = "";
-    char publicKey[256] = "";
+    char privateKey[1024] = "";
+    char publicKey[1024] = "";
+
+    // blsSecretKeyGetHexStr(privateKey, 1024, &sec);
+    // blsPublicKeySerialize(publicKey, 1024, &pub);
 
 	sec2hex(&sec, privateKey);
 	pub2hex(&pub, publicKey);
 
-    printf("{"
-        "\"privateKey\":\"%s\","
-        "\"publicKey\":\"%s\""
-    "}",privateKey, publicKey);
+	dumpSec(&sec);
+	printf("\n");
+	dumpSec2(&sec);
+
+//    printf("{"
+//        "\"privateKey\":\"%s\","
+//        "\"publicKey\":\"%s\""
+//    "}", privateKey, publicKey);
+
+//    printf("{"
+//        "\"n\":\"%d\","
+//    "}", n);
+
 }
 
 //void str2sec(blsSecretKey *sec, const void *buf, mclSize bufSize)
@@ -78,17 +98,26 @@ void generatePair()
 //    blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
 //}
 
-
 //mclSize blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
 //mclSize blsPublicKeyDeserialize(blsPublicKey *pub, const void *buf, mclSize bufSize);
 //mclSize blsSignatureDeserialize(blsSignature *sig, const void *buf, mclSize bufSize);
+
+// {"privateKey":"c930dbe93a1abd8bb25e38e89c807f49aca5f055c05b58bcc464630de3922a47","publicKey":"13e40a4b0207e760d3f8fe7fd9e7c712fdd59ce2e9cd3667e44d1245076c4398c6e6c7a4fb49f9a5f4b3badffb5a7d0b53255755ffdd67719f2c844bf0831962df2d7b39f5afdc30899eca45f876200e8b5b1231b99d4727dd588e2581fe0992"}
+// {"privateKey":"2081e0e8c8c29adbc9bb35fc7f5b67f8cd1560cb21141b24655ac6748ba34f08","publicKey":"eeda78eb74a12de633242881958efa024fc94b9f69b81f28840d4cfb60579baa54980e46195a4a57a158f3bfee5b0705b06130d22b0f615191af09cd5fcbeef680f84e36b4bfda2bf695f2540741ac657ddf8dbcb3491bc51dd181f97eea4f0f"}
 
 
 // Usage: bls_api sign {message} {privateKey}
 void sign(char *msg, char *privateKey)
 {
 	blsSecretKey sec;
-    blsSecretKeySetHexStr(&sec, privateKey, sizeof(privateKey));
+    blsSecretKeySetHexStr(&sec, privateKey, 64);
+    printf("%s\n|%d|\n", privateKey, 1);
+    dumpSec(&sec);
+
+//    printf("{"
+//        "\"asd\":\"%s\","
+////        "\"buf\":\"%s\","
+//    "}",asd);
 
 //    // unsigned char buf[128];
 //    size_t n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
@@ -98,10 +127,6 @@ void sign(char *msg, char *privateKey)
 //
 //	char test[128];
 //	sec2hex(&sec, test);
-
-	printf("{"
-        "\"test\":\"%s\""
-    "}",privateKey);
 
     // blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
 	// str2sec(&sec, privateKey, strlen(privateKey));
@@ -145,7 +170,6 @@ int main(int argc, char *argv[])
 //	blsSecretKey sec;
 //	blsPublicKey pub;
 //
-//    setPair(&sec, &pub);
 //
 //	blsSignature sig;
 //	const char *msg = "Hello World!";
