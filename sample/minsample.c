@@ -26,7 +26,9 @@ void publicKeyToString(blsPublicKey *pub, char *string)
     for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
 }
 
-
+/**
+*
+*/
 void generatePair()
 {
 	blsSecretKey sec;
@@ -41,15 +43,22 @@ void generatePair()
     publicKeyToString(&pub, publicKey);
 
     printf("{\"privateKey\":\"%s\", \"publicKey\":\"%s\"}", privateKey, publicKey);
+}
 
-//	blsSignature sig;
-//	const char *msg = "Hello World!";
-//	size_t msgSize = 12;
+void sign()
+{
+	blsSecretKey sec;
+	blsPublicKey pub;
 
-	// blsSign(&sig, &sec, msg, msgSize);
+    setPair(&sec, &pub);
 
-	// printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
-	// printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
+    char privateKey[128];
+    char publicKey[128];
+
+    secretToString(&sec, privateKey);
+    publicKeyToString(&pub, publicKey);
+
+    printf("{\"privateKey\":\"%s\", \"publicKey\":\"%s\"}", privateKey, publicKey);
 }
 
 
