@@ -10,6 +10,20 @@ void makePair(blsSecretKey *sec, blsPublicKey *pub) {
     blsGetPublicKey(pub, sec);
 }
 
+void dumpSig2(blsSignature *sig)
+{
+	unsigned char buf[1024];
+	size_t n = blsSignatureSerialize(buf, sizeof(buf), sig);
+	for (size_t i = n; i > 0; i--) printf("%02x", buf[i-1]);
+}
+
+void dumpSig(blsSignature *sig)
+{
+	unsigned char buf[1024];
+	size_t n = blsSignatureGetHexStr(buf, sizeof(buf), sig);
+    printf("%s", buf);
+}
+
 void dumpSec(blsSecretKey *sec)
 {
 	unsigned char buf[1024];
@@ -21,17 +35,15 @@ void dumpSec2(blsSecretKey *sec)
 {
 	unsigned char buf[1024];
 	size_t n = blsSecretKeySerialize(buf, sizeof(buf), sec);
-	for (size_t i = 0; i < n; i++) {
-		printf("%02x", buf[i]);
-	}
+	for (size_t i = n; i > 0; i--) printf("%02x", buf[i-1]);
 }
 
 void dumpPub(blsPublicKey *pub)
 {
 	unsigned char buf[256];
 	size_t n = blsPublicKeySerialize(buf, sizeof(buf), pub);
-	for (size_t i = 0; i < n; i++) {
-		printf("%02x", buf[i]);
+	for (size_t i = n; i > 0; i--) {
+		printf("%02x", buf[i-1]);
 	}
 }
 
@@ -40,11 +52,11 @@ void pub2hex(blsPublicKey *pub, char *hex)
 	unsigned char buf[256];
 	size_t n = blsPublicKeySerialize(buf, 256, pub);
 
-	for (size_t i = 0; i < n; i++) {
+    for (size_t i = n; i > 0; i--) {
         char row[4];
-        sprintf(row, "%02x", buf[i]);
+        sprintf(row, "%02x", buf[i-1]);
         strcat(hex, row);
-	}
+    }
 }
 
 
@@ -52,11 +64,24 @@ void sec2hex(blsSecretKey *sec, char *hex)
 {
 	unsigned char buf[64];
 
-	size_t n = blsSecretKeySerialize(buf, 128, sec);
+	size_t n = blsSecretKeySerialize(buf, 64, sec);
 
-	for (size_t i = 0; i < n; i++) {
+	for (size_t i = n; i > 0; i--) {
         char row[4];
-        sprintf(row, "%02x", buf[i]);
+        sprintf(row, "%02x", buf[i-1]);
+        strcat(hex, row);
+	}
+}
+
+void sig2hex(blsSignature *sig, char *hex)
+{
+	unsigned char buf[256];
+
+	size_t n = blsSignatureSerialize(buf, 256, sig);
+
+	for (size_t i = n; i > 0; i--) {
+        char row[4];
+        sprintf(row, "%02x", buf[i-1]);
         strcat(hex, row);
 	}
 }
@@ -90,48 +115,68 @@ void generatePair()
 //mclSize blsPublicKeyDeserialize(blsPublicKey *pub, const void *buf, mclSize bufSize);
 //mclSize blsSignatureDeserialize(blsSignature *sig, const void *buf, mclSize bufSize);
 
-// {"privateKey":"986f2ac6b2c31ec0bba7c8a83e70c781aa54e54fb33af03c1b75b455e92d2f1e","publicKey":"6382e53687d733849e66ca27bc11e79440e2e3fbb422ede03d25ecb8e8923033fe4d326d773d5289309564d7fab7420943cd55999eaaa69adbf9123c5064700417927d83b585540831b7a6e295fc5d32b4adfbd87fa02053a5f4e6bd1838520d"}
-// {"privateKey":"67b75f9316ffe0d5455403771c3008a76abcad0d2edc42b66f0ba54c53265b04","publicKey":"c6204070abd2c4b1fdb63701a2dc1cf7d93039cab77a1eb31ffa7a60e2b84fef61bbb9079f165ae5f55424da0ec56a188f6db8e5ecd85ebd0c931386d416c4b96ad092ed9b8f33a14c4ed805a3878c862bc14fcd807aba757ef9ea59cd926d13"}
-
+// {"privateKey":"56c002ce9ce7f7ec6b4859cc9550d4f4f76dcb15073b6083be1b236fe7896c5e","publicKey":"146fbd798abeeb7413e6ecc055dc8182bd2a10f4863b466f91aa2ef6618c4f7376ae81bfcf59666e7bc5da9a0a106256035c991a1c31510b697a6956ed8e1c8482491711ae5c5f82fdc8eec380d7580724a49de0f797b2e263fa37856914c57b"}
+// sign 9933158d568e1701d2d3c044570b38e5362675783f8a73a80b53a4ca0a3e39fdd13ef6ae238620f95fb09ce7f34fee57
 // Usage: bls_api sign {message} {privateKey}
 void sign(char *msg, char *privateKey)
 {
 	blsSecretKey sec;
-
-	memset(&sec, 0, sizeof(sec));
-	
     blsSecretKeySetHexStr(&sec, privateKey, 64);
 
-    dumpSec2(&sec);
+    blsSignature sig;
+    blsSign(&sig, &sec, msg, strlen(msg));
+
+    char signature[256] = "";
+
+    sig2hex(&sig, signature);
+
+    printf("{"
+        "\"signature\":\"%s\","
+        "\"msg\":\"%s\""
+    "}",signature, msg);
+}
+
+void verify(char *msg, char *signature, char *publicKey)
+{
+//	blsPublicKey pub;
+//  blsPublicKeySetHexStr(&pub, publicKey, 192);
+
+    const char hexSig[] = "9933158d568e1701d2d3c044570b38e5362675783f8a73a80b53a4ca0a3e39fdd13ef6ae238620f95fb09ce7f34fee57";
+    blsSignature sig;
+    blsSignatureSetHexStr(&sig, hexSig, strlen(hexSig));
+
+    unsigned char buf1[1024];
+    size_t n1 = blsSignatureSerialize(buf1, sizeof(buf1), &sig);
+    for (size_t i = n1; i > 0; i--) printf("%02x", buf1[i-1]);
 
     printf("\n");
 
-    dumpSec(&sec);
+    unsigned char buf[1024];
+    size_t n = blsSignatureGetHexStr(buf, sizeof(buf), &sig);
+    printf("%s", buf);
 
-//    // unsigned char buf[128];
-//    size_t n = blsPublicKeySerialize(buf, sizeof(buf), &pub);
-//    for (size_t i = 0; i < n; i++) sprintf(string + strlen(string) , "%02x", buf[i]);
+printf("\n");
 
-//    blsSecretKeyDeserialize(&sec, privateKey, sizeof(privateKey));
 //
-//	char test[128];
-//	sec2hex(&sec, test);
+//    char s[1024] = "";
+//    char p[1024] = "";
+//    sig2hex(&sig, s);
+//    pub2hex(&pub, p);
+//
+//    printf("{"
+//        "\"s\":\"%s\","
+//        "\"p\":\"%s\","
+//        "\"msg\":\"%s\""
+//    "}",s, p, msg);
 
-    // blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
-	// str2sec(&sec, privateKey, strlen(privateKey));
-    // printf("%s %s", msg, privateKey);
-
-//    blsSignature sig;
-//    blsSign(&sig, &sec, msg, strlen(msg));
+    // printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, strlen(msg)), msg);
 
 //	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
 //	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
 
 //    printf("{"
-//        "\"privateKey\":\"%s\","
-//        "\"publicKey\":\"%s\""
-//    "}",privateKey, publicKey);
-
+//        "\"blsVerify\":\"%s\""
+//    "}", blsVerify(&sig, &pub, msg, strlen(msg)));
 }
 
 // make && make install && clear && time ../bin/minsample getPair
@@ -147,6 +192,8 @@ int main(int argc, char *argv[])
 	    generatePair();
 	} else if (!strcmp("sign",argv[1])) {
 	    sign(argv[2], argv[3]);
+	} else if (!strcmp("verify", argv[1])) {
+	    verify(argv[2], argv[3], argv[4]);
 	}
 
 	return 0;
