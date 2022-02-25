@@ -86,7 +86,14 @@ void sig2hex(blsSignature *sig, char *hex)
 	}
 }
 
-/** Usage: bls_api generatePair */
+
+/*
+ ********************************
+ *
+ * Usage: bls_api generatePair
+ *
+ ********************************
+*/
 void generatePair()
 {
 	blsSecretKey sec;
@@ -118,6 +125,16 @@ void generatePair()
 // {"privateKey":"56c002ce9ce7f7ec6b4859cc9550d4f4f76dcb15073b6083be1b236fe7896c5e","publicKey":"146fbd798abeeb7413e6ecc055dc8182bd2a10f4863b466f91aa2ef6618c4f7376ae81bfcf59666e7bc5da9a0a106256035c991a1c31510b697a6956ed8e1c8482491711ae5c5f82fdc8eec380d7580724a49de0f797b2e263fa37856914c57b"}
 // sign 9933158d568e1701d2d3c044570b38e5362675783f8a73a80b53a4ca0a3e39fdd13ef6ae238620f95fb09ce7f34fee57
 // Usage: bls_api sign {message} {privateKey}
+
+
+
+/*
+ ******************************************
+ *
+ * Usage: bls_api sign {msg} {privateKey}
+ *
+ ******************************************
+*/
 void sign(char *msg, char *privateKey)
 {
 	blsSecretKey sec;
@@ -133,7 +150,7 @@ printf("\n");
 dumpSig(&sig);
 printf("\n");
 
-    sig2hex(&sig, signature);
+    //sig2hex(&sig, signature);
 
 printf("\n");
 
@@ -144,18 +161,31 @@ printf("\n");
     "}",signature, msg);
 }
 
+
+/*
+ ********************************************************
+ *
+ * Usage: bls_api verify {msg} {signature} {publicKey}
+ *
+ ********************************************************
+*/
 void verify(char *msg, char *signature, char *publicKey)
 {
 	blsPublicKey pub;
-    blsPublicKeySetHexStr(&pub, publicKey, 192);
+    // blsPublicKeySetHexStr(&pub, publicKey, strlen(publicKey));
 
     blsSignature sig;
     blsSignatureSetHexStr(&sig, signature, strlen(signature));
 
-printf("%s", signature);
+dumpPub(&pub);
+
+printf("\n");
+printf("\n");
+// dumpSig2(&sig);
+
 printf("\n");
 
-dumpSig2(&sig);
+dumpSig(&sig);
 
 printf("\n");
 
