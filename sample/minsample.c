@@ -152,20 +152,20 @@ void sign(char *msg, char *privateKey)
 
     char signature[256] = "";
 
-dumpSig2(&sig);
-printf("\n");
-dumpSig(&sig);
-printf("\n");
-
-    //sig2hex(&sig, signature);
-
-printf("\n");
-
-
-    printf("{"
-        "\"signature\":\"%s\","
-        "\"msg\":\"%s\""
-    "}",signature, msg);
+//dumpSig2(&sig);
+//printf("\n");
+//dumpSig(&sig);
+//printf("\n");
+//
+//    //sig2hex(&sig, signature);
+//
+//printf("\n");
+//
+//
+//    printf("{"
+//        "\"signature\":\"%s\","
+//        "\"msg\":\"%s\""
+//    "}",signature, msg);
 }
 
 
@@ -273,7 +273,10 @@ int main(int argc, char *argv[])
 	if (!strcmp("generatePair",argv[1])) {
 	    generatePair();
 	} else if (!strcmp("sign",argv[1])) {
-	    sign(argv[2], argv[3]);
+	    for (int i = 0; i < 1000; i++) {
+	        sign(argv[2], argv[3]);
+	    }
+
 	} else if (!strcmp("verify", argv[1])) {
 	    verify(argv[2], argv[3], argv[4]);
 	}  else if (!strcmp("test", argv[1])) {
