@@ -128,7 +128,15 @@ void sign(char *msg, char *privateKey)
 
     char signature[256] = "";
 
+dumpSig2(&sig);
+printf("\n");
+dumpSig(&sig);
+printf("\n");
+
     sig2hex(&sig, signature);
+
+printf("\n");
+
 
     printf("{"
         "\"signature\":\"%s\","
@@ -138,22 +146,16 @@ void sign(char *msg, char *privateKey)
 
 void verify(char *msg, char *signature, char *publicKey)
 {
-//	blsPublicKey pub;
-//  blsPublicKeySetHexStr(&pub, publicKey, 192);
+	blsPublicKey pub;
+    blsPublicKeySetHexStr(&pub, publicKey, 192);
 
-    const char hexSig[] = "9933158d568e1701d2d3c044570b38e5362675783f8a73a80b53a4ca0a3e39fdd13ef6ae238620f95fb09ce7f34fee57";
     blsSignature sig;
-    blsSignatureSetHexStr(&sig, hexSig, strlen(hexSig));
+    blsSignatureSetHexStr(&sig, signature, strlen(signature));
 
-    unsigned char buf1[1024];
-    size_t n1 = blsSignatureSerialize(buf1, sizeof(buf1), &sig);
-    for (size_t i = n1; i > 0; i--) printf("%02x", buf1[i-1]);
+printf("%s", signature);
+printf("\n");
 
-    printf("\n");
-
-    unsigned char buf[1024];
-    size_t n = blsSignatureGetHexStr(buf, sizeof(buf), &sig);
-    printf("%s", buf);
+dumpSig2(&sig);
 
 printf("\n");
 
@@ -169,7 +171,7 @@ printf("\n");
 //        "\"msg\":\"%s\""
 //    "}",s, p, msg);
 
-    // printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, strlen(msg)), msg);
+    printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, strlen(msg)), msg);
 
 //	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
 //	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
@@ -177,6 +179,7 @@ printf("\n");
 //    printf("{"
 //        "\"blsVerify\":\"%s\""
 //    "}", blsVerify(&sig, &pub, msg, strlen(msg)));
+
 }
 
 // make && make install && clear && time ../bin/minsample getPair
