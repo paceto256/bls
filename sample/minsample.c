@@ -38,19 +38,26 @@ void dumpSec2(blsSecretKey *sec)
 	for (size_t i = n; i > 0; i--) printf("%02x", buf[i-1]);
 }
 
+void dumpPub2(blsPublicKey *pub)
+{
+	unsigned char buf[1024];
+	size_t n = blsPublicKeySerialize(buf, sizeof(buf), pub);
+	for (size_t i = n/2; i > 0; i--) {
+	    printf("%02x", buf[i-1]);
+	}
+}
+
 void dumpPub(blsPublicKey *pub)
 {
-	unsigned char buf[256];
-	size_t n = blsPublicKeySerialize(buf, sizeof(buf), pub);
-	for (size_t i = n; i > 0; i--) {
-		printf("%02x", buf[i-1]);
-	}
+	unsigned char buf[128];
+	size_t n = blsPublicKeyGetHexStr(buf, sizeof(buf), pub);
+    printf("%s", buf);
 }
 
 void pub2hex(blsPublicKey *pub, char *hex)
 {
-	unsigned char buf[256];
-	size_t n = blsPublicKeySerialize(buf, 256, pub);
+	unsigned char buf[96];
+	size_t n = blsPublicKeySerialize(buf, 96, pub);
 
     for (size_t i = n; i > 0; i--) {
         char row[4];
@@ -130,7 +137,7 @@ void generatePair()
 
 /*
  ******************************************
- *
+ * Sign
  * Usage: bls_api sign {msg} {privateKey}
  *
  ******************************************
@@ -172,44 +179,86 @@ printf("\n");
 void verify(char *msg, char *signature, char *publicKey)
 {
 	blsPublicKey pub;
-    // blsPublicKeySetHexStr(&pub, publicKey, strlen(publicKey));
-
-    blsSignature sig;
-    blsSignatureSetHexStr(&sig, signature, strlen(signature));
+	size_t nnn;
+    nnn = blsPublicKeySetHexStr(&pub, publicKey, strlen(publicKey));
+    //nnn = blsPublicKeyDeserialize(&pub, publicKey, strlen(publicKey));
 
 dumpPub(&pub);
 
-printf("\n");
-printf("\n");
-// dumpSig2(&sig);
-
-printf("\n");
-
-dumpSig(&sig);
-
-printf("\n");
-
 //
-//    char s[1024] = "";
-//    char p[1024] = "";
-//    sig2hex(&sig, s);
-//    pub2hex(&pub, p);
+//    blsSignature sig;
+//    blsSignatureSetHexStr(&sig, signature, strlen(signature));
 //
-//    printf("{"
-//        "\"s\":\"%s\","
-//        "\"p\":\"%s\","
-//        "\"msg\":\"%s\""
-//    "}",s, p, msg);
+//printf("\n");
+//// dumpSig2(&sig);
+//
+//printf("\n");
+//
+//dumpSig(&sig);
+//
+//printf("\n");
+//
+////
+////    char s[1024] = "";
+////    char p[1024] = "";
+////    sig2hex(&sig, s);
+////    pub2hex(&pub, p);
+////
+////    printf("{"
+////        "\"s\":\"%s\","
+////        "\"p\":\"%s\","
+////        "\"msg\":\"%s\""
+////    "}",s, p, msg);
+//
+//    printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, strlen(msg)), msg);
+//
+////	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
+////	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
+//
+////    printf("{"
+////        "\"blsVerify\":\"%s\""
+////    "}", blsVerify(&sig, &pub, msg, strlen(msg)));
 
-    printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, strlen(msg)), msg);
+}
 
-//	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
-//	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
+void test () {
+    char p[] = "13fcc546da6b6eae061805b22531e5d4636fc3ee6642af1bb4316c3caa21fecee34e3d2f8d72824a6398f5bda9f4f4c5";
+    char s[] = "3bc875680b14caa410fd9f45341123bfa638cbef3d1803f7712be72d6cc695fc";
 
-//    printf("{"
-//        "\"blsVerify\":\"%s\""
-//    "}", blsVerify(&sig, &pub, msg, strlen(msg)));
+	blsSecretKey sec;
+	blsPublicKey pub;
+	blsSignature sig;
 
+    makePair(&sec, &pub);
+
+    size_t n1;
+    size_t n2;
+
+	n1 = blsPublicKeySetHexStr(&pub, p, strlen(p));
+	n2 = blsSecretKeySetHexStr(&sec, s, strlen(s));
+	printf("n1=%d\n", n1);
+	printf("n2=%d\n", n2);
+
+	const char *msg = "This is a pen";
+	const size_t msgSize = strlen(msg);
+
+	dumpPub(&pub);
+
+    printf("\n");
+    dumpPub2(&pub);
+    printf("\n");
+
+	dumpSec(&sec);
+	printf("\n");
+	dumpSec2(&sec);
+
+	blsSecretKeySetByCSPRNG(&sec);
+
+	blsGetPublicKey(&pub, &sec);
+
+	blsSign(&sig, &sec, msg, msgSize);
+
+	printf("\n%d", blsVerify(&sig, &pub, msg, msgSize));
 }
 
 // make && make install && clear && time ../bin/minsample getPair
@@ -227,125 +276,10 @@ int main(int argc, char *argv[])
 	    sign(argv[2], argv[3]);
 	} else if (!strcmp("verify", argv[1])) {
 	    verify(argv[2], argv[3], argv[4]);
+	}  else if (!strcmp("test", argv[1])) {
+	    test(argv[2], argv[3]);
 	}
+
 
 	return 0;
 }
-
-
-
-//void simpleSample()
-//{
-//	blsSecretKey sec;
-//	blsPublicKey pub;
-//
-//
-//	blsSignature sig;
-//	const char *msg = "Hello World!";
-//	size_t msgSize = 12;
-//
-//	blsSign(&sig, &sec, msg, msgSize);
-//
-//	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
-//	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
-//}
-
-//void k_of_nSample()
-//{
-//#define N 5 // you can increase
-//#define K 3 // fixed
-//	blsPublicKey mpk;
-//	blsId ids[N];
-//	blsSecretKey secs[N];
-//	blsPublicKey pubs[N];
-//	blsSignature sigs[N];
-//
-//	const char *msg = "abc";
-//	const size_t msgSize = strlen(msg);
-//
-//	// All ids must be non-zero and different from each other.
-//	for (int i = 0; i < N; i++) {
-//		blsIdSetInt(&ids[i], i + 1);
-//	}
-//
-//	/*
-//		A trusted third party distributes N secret keys.
-//		If you want to avoid it, then see DKG (distributed key generation),
-//		which is out of the scope of this library.
-//	*/
-//	{
-//		blsSecretKey msk[K];
-//		for (int i = 0; i < K; i++) {
-//			blsSecretKeySetByCSPRNG(&msk[i]);
-//		}
-//		// share secret key
-//		for (int i = 0; i < N; i++) {
-//			blsSecretKeyShare(&secs[i], msk, K, &ids[i]);
-//		}
-//
-//		// get master public key
-//		blsGetPublicKey(&mpk, &msk[0]);
-//
-//		// each user gets their own public key
-//		for (int i = 0; i < N; i++) {
-//			blsGetPublicKey(&pubs[i], &secs[i]);
-//		}
-//	}
-//
-//	// each user signs the message
-//	for (int i = 0; i < N; i++) {
-//		blsSign(&sigs[i], &secs[i], msg, msgSize);
-//	}
-//
-//	// The master signature can be recovered from any K subset of N sigs.
-//	{
-//		assert(K == 3);
-//		blsSignature subSigs[K];
-//		blsId subIds[K];
-//		for (int i = 0; i < N; i++) {
-//			subSigs[0] = sigs[i];
-//			subIds[0] = ids[i];
-//			for (int j = i + 1; j < N; j++) {
-//				subSigs[1] = sigs[j];
-//				subIds[1] = ids[j];
-//				for (int k = j + 1; k < N; k++) {
-//					subSigs[2] = sigs[k];
-//					subIds[2] = ids[k];
-//					// recover sig from subSigs[K] and subIds[K]
-//					blsSignature sig;
-//					blsSignatureRecover(&sig, subSigs, subIds, K);
-//					if (!blsVerify(&sig, &mpk, msg, msgSize)) {
-//						printf("ERR can't recover i=%d, j=%d, k=%d\n", i, j, k);
-//						return;
-//					}
-//				}
-//			}
-//		}
-//		puts("recover test1 is ok");
-//	}
-//
-//	// any K-1 of N sigs can't recover
-//	{
-//		assert(K == 3);
-//		blsSignature subSigs[K - 1];
-//		blsId subIds[K - 1];
-//		for (int i = 0; i < N; i++) {
-//			subSigs[0] = sigs[i];
-//			subIds[0] = ids[i];
-//			for (int j = i + 1; j < N; j++) {
-//				subSigs[1] = sigs[j];
-//				subIds[1] = ids[j];
-//				// can't recover sig from subSigs[K-1] and subIds[K-1]
-//				blsSignature sig;
-//				blsSignatureRecover(&sig, subSigs, subIds, K - 1);
-//				if (blsVerify(&sig, &mpk, msg, msgSize)) {
-//					printf("ERR verify must always fail. i=%d, j=%d\n", i, j);
-//					return;
-//				}
-//			}
-//		}
-//		puts("recover test2 is ok");
-//	}
-//#undef K
-//#undef N
-//}
