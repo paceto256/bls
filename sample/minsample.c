@@ -120,21 +120,6 @@ void generatePair()
     "}", privateKey, publicKey);
 }
 
-//void str2sec(blsSecretKey *sec, const void *buf, mclSize bufSize)
-//{
-//    blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
-//}
-
-//mclSize blsSecretKeyDeserialize(blsSecretKey *sec, const void *buf, mclSize bufSize);
-//mclSize blsPublicKeyDeserialize(blsPublicKey *pub, const void *buf, mclSize bufSize);
-//mclSize blsSignatureDeserialize(blsSignature *sig, const void *buf, mclSize bufSize);
-
-// {"privateKey":"56c002ce9ce7f7ec6b4859cc9550d4f4f76dcb15073b6083be1b236fe7896c5e","publicKey":"146fbd798abeeb7413e6ecc055dc8182bd2a10f4863b466f91aa2ef6618c4f7376ae81bfcf59666e7bc5da9a0a106256035c991a1c31510b697a6956ed8e1c8482491711ae5c5f82fdc8eec380d7580724a49de0f797b2e263fa37856914c57b"}
-// sign 9933158d568e1701d2d3c044570b38e5362675783f8a73a80b53a4ca0a3e39fdd13ef6ae238620f95fb09ce7f34fee57
-// Usage: bls_api sign {message} {privateKey}
-
-
-
 /*
  ******************************************
  * Sign
@@ -184,40 +169,6 @@ void verify(char *msg, char *signature, char *publicKey)
     //nnn = blsPublicKeyDeserialize(&pub, publicKey, strlen(publicKey));
 
 dumpPub(&pub);
-
-//
-//    blsSignature sig;
-//    blsSignatureSetHexStr(&sig, signature, strlen(signature));
-//
-//printf("\n");
-//// dumpSig2(&sig);
-//
-//printf("\n");
-//
-//dumpSig(&sig);
-//
-//printf("\n");
-//
-////
-////    char s[1024] = "";
-////    char p[1024] = "";
-////    sig2hex(&sig, s);
-////    pub2hex(&pub, p);
-////
-////    printf("{"
-////        "\"s\":\"%s\","
-////        "\"p\":\"%s\","
-////        "\"msg\":\"%s\""
-////    "}",s, p, msg);
-//
-//    printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, strlen(msg)), msg);
-//
-////	printf("verify correct message %d \"%s\"\n", blsVerify(&sig, &pub, msg, msgSize), msg);
-////	printf("verify wrong message %d\n", blsVerify(&sig, &pub, "xyz", msgSize));
-//
-////    printf("{"
-////        "\"blsVerify\":\"%s\""
-////    "}", blsVerify(&sig, &pub, msg, strlen(msg)));
 
 }
 
